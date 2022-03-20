@@ -1,17 +1,17 @@
-aiogram            
-aiohttp            
-aiosignal          
-async-timeout      
-asyncio            
-attrs              
-Babel              
-certifi            
-charset-normalizer 
-dnspython          
-frozenlist         
-idna               
-motor             
-multidict          
-pymongo           
-pytz               
-yarl              
+aiogram,          
+aiohttp     ,       
+aiosignal   ,       
+async-timeout  ,    
+asyncio        ,    
+attrs          ,    
+Babel          ,    
+certifi          ,  
+charset-normalizer ,
+dnspython          ,
+frozenlist       ,  
+idna          ,     
+motor         ,    
+multidict    ,      
+pymongo      ,     
+pytz         ,      
+yarl        ,      
