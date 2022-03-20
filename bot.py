@@ -1,4 +1,4 @@
-from asyncio.windows_events import NULL
+#from asyncio.windows_events import NULL
 #from curses.ascii import CR
 from gc import callbacks
 import logging
