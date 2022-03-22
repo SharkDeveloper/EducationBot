@@ -1,5 +1,5 @@
-#from asyncio.windows_events import NULL
-#from curses.ascii import CR
+
+from email import message
 from gc import callbacks
 import logging
 from pydoc import text
@@ -51,6 +51,7 @@ async def new_sub(message:types.Message, state:FSMContext):
         await CreateandAdd_states.when_remind.set()
     elif message.text == "Создать расписание":
         await message.answer("Введите день недели")
+        await CreateandAdd_states.waiting_dayofweek.set()
     #elif message.text =     
     #записать в DataBase 
     #добавить время
@@ -62,7 +63,19 @@ async def new_sub(message:types.Message, state:FSMContext):
 
     
 
-
+@dp.message_handler(state = CreateandAdd_states.waiting_dayofweek)
+async def waiting_dayofweek(message:types.Message,state:FSMContext):
+    print(7)
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
+    button1 =types.KeyboardButton("Числитель")
+    button2 = types.KeyboardButton("Знаменатель")
+    button3 = types.KeyboardButton("Всегда")
+    keyboard.add(button1,button2,button3)
+    await message.answer("Запомнил)",reply_markup=keyboard)
+    await state.reset_state()
+    await dp.storage.close()
+    await dp.storage.wait_closed()
+    await state.finish()
     
 @dp.message_handler(state = CreateandAdd_states.waiting_sub)
 async def waiting_sub_name(message:types.Message,state:FSMContext):
@@ -73,9 +86,7 @@ async def waiting_sub_name(message:types.Message,state:FSMContext):
     button2 = types.KeyboardButton("Создать расписание")
     keyboard.add(button1,button2)
     await message.answer("Предмет успешно создан!",reply_markup=keyboard)
-    await dp.storage.close()
-    await dp.storage.wait_closed()
-    await state.finish()
+    
 
 
 
@@ -84,12 +95,13 @@ trash = "" #просто существует ,чтобы предавать д�
 @dp.message_handler(state = CreateandAdd_states.waiting_sub_for_note)
 async def waiting_sub_note(message : types.Message,state:FSMContext):
     print(5)
+    print(DataBase.get({"id":message.chat.id,message.text:""}))
     if DataBase.get({"id":message.chat.id,message.text:""}) == None:
         await message.answer("Такого предмета не существует.")
         await helper(message)
-        await dp.storage.close()
-        await dp.storage.wait_closed()
-        await state.finish()
+        #await dp.storage.close()
+        #await dp.storage.wait_closed()
+        #await state.finish()
 
     else:
         await message.answer("Введите текст заметки")
@@ -97,10 +109,11 @@ async def waiting_sub_note(message : types.Message,state:FSMContext):
         global trash
         trash = message.text  # DataBase.get({"id":message.chat.id,message.text:""})
         print(trash)
+    await state.reset_state()
 
 @dp.message_handler(state = CreateandAdd_states.when_remind)
 async def when_remind(message : types.Message,state:FSMContext):
-
+    print(8)
     await dp.storage.close()
     await dp.storage.wait_closed()
     await state.finish()
