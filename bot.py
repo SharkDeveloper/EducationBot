@@ -20,7 +20,13 @@ logging.basicConfig(level=logging.INFO)
 
 
 # Хэндлер на команду /help
-@dp.message_handler(commands=["start","help"])
+@dp.message_handler(commands=["start"])
+async def starter(message: types.Message):
+    await message.answer("Введите название предмета")
+    #вызов состояния 
+
+
+@dp.message_handler(commands=["help"])
 async def helper(message: types.Message):
     print(1)
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
@@ -52,10 +58,6 @@ async def new_sub(message:types.Message, state:FSMContext):
     elif message.text == "Создать расписание":
         await message.answer("Введите день недели")
         await CreateandAdd_states.waiting_dayofweek.set()
-    #elif message.text =     
-    #записать в DataBase 
-    #добавить время
-
     else:
         await message.answer("Сообщенеи не распознано!")
 
@@ -95,7 +97,6 @@ trash = "" #просто существует ,чтобы предавать д�
 @dp.message_handler(state = CreateandAdd_states.waiting_sub_for_note)
 async def waiting_sub_note(message : types.Message,state:FSMContext):
     print(5)
-    print(DataBase.get({"id":message.chat.id,message.text:""}))
     if DataBase.get({"id":message.chat.id,message.text:""}) == None:
         await message.answer("Такого предмета не существует.")
         await helper(message)
@@ -109,7 +110,6 @@ async def waiting_sub_note(message : types.Message,state:FSMContext):
         global trash
         trash = message.text  # DataBase.get({"id":message.chat.id,message.text:""})
         print(trash)
-    await state.reset_state()
 
 @dp.message_handler(state = CreateandAdd_states.when_remind)
 async def when_remind(message : types.Message,state:FSMContext):
@@ -125,12 +125,8 @@ async def waiting_note_name(message : types.Message,state:FSMContext):
     DataBase.set_note(message.chat.id,trash,{message.text:""})
     await message.answer("Заметка успешно создана!")
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
-    keyboard.add(types.KeyboardButton("След.занятие"),types.KeyboardButton("Другое..."))
+    keyboard.add(types.KeyboardButton("Понедельник"),types.KeyboardButton("Вторник"),types.KeyboardButton("Среда"),types.KeyboardButton("Четверг"),types.KeyboardButton("Пятница"),types.KeyboardButton("Суббота"),types.KeyboardButton("Воскресенье"))
     await message.answer("Когда напомнить?",reply_markup=keyboard)
-    await dp.storage.close()
-    await dp.storage.wait_closed()
-    await state.finish()
-
 
 #@dp.message_handler(text="След.занятие")
 #async def next_lesson(message:types.Message,state:FSMContext):

@@ -5,7 +5,7 @@ import pymongo
 
 
 
-client = pymongo.MongoClient("mongodb://Admin:12345687@telegrambot.qqtgh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 db = client.telegrambot
 
 collection = db.BotUsers
@@ -25,5 +25,8 @@ def creat_sub(id,key):
 
 def create_doc(key):
     collection.insert_one({"id":str(key)})
+
+#Timtable 
+timetables = db.Timetables
 
 
