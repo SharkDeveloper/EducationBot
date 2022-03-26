@@ -18,8 +18,6 @@ def test():
     
     print(dicttmtble)
     
-    #adfadsf
-    
     
 
 test()
