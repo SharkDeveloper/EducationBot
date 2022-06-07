@@ -12,21 +12,16 @@ from aiogram.contrib.fsm_storage.mongo import MongoStorage
 # Объект бота
 bot = Bot(token="1976410716:AAG7p5K2Hsb6rsYM2YBl0ihSnlMnKwUkFlY")
 #Подключение БД
-storage = MongoStorage(uri="mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/telegrambot?retryWrites=true&w=majority")  
+storage = MongoStorage(uri="mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/?retryWrites=true&w=majority")  
 # Диспетчер для бота
 dp = Dispatcher(bot,storage=storage)
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
 
-# Хэндлер на команду /help
-@dp.message_handler(commands=["start"])
-async def starter(message: types.Message):
-    await message.answer("Введите название предмета")
-    #вызов состояния 
 
-
-@dp.message_handler(commands=["help"])
+# Хэндлер на команду /help /start
+@dp.message_handler(commands=["help","start"])
 async def helper(message: types.Message):
     print(1)
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
@@ -68,12 +63,8 @@ async def new_sub(message:types.Message, state:FSMContext):
 @dp.message_handler(state = CreateandAdd_states.waiting_dayofweek)
 async def waiting_dayofweek(message:types.Message,state:FSMContext):
     print(7)
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
-    button1 =types.KeyboardButton("Числитель")
-    button2 = types.KeyboardButton("Знаменатель")
-    button3 = types.KeyboardButton("Всегда")
-    keyboard.add(button1,button2,button3)
-    await message.answer("Запомнил)",reply_markup=keyboard)
+    await message.answer("Запомнил)")
+    DataBase.
     await state.reset_state()
     await dp.storage.close()
     await dp.storage.wait_closed()
@@ -88,6 +79,10 @@ async def waiting_sub_name(message:types.Message,state:FSMContext):
     button2 = types.KeyboardButton("Создать расписание")
     keyboard.add(button1,button2)
     await message.answer("Предмет успешно создан!",reply_markup=keyboard)
+    await state.reset_state()
+    await dp.storage.close()
+    await dp.storage.wait_closed()
+    await state.finish()
     
 
 
@@ -127,6 +122,8 @@ async def waiting_note_name(message : types.Message,state:FSMContext):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
     keyboard.add(types.KeyboardButton("Понедельник"),types.KeyboardButton("Вторник"),types.KeyboardButton("Среда"),types.KeyboardButton("Четверг"),types.KeyboardButton("Пятница"),types.KeyboardButton("Суббота"),types.KeyboardButton("Воскресенье"))
     await message.answer("Когда напомнить?",reply_markup=keyboard)
+    await CreateandAdd_states.waiting_dayofweek.set()
+   
 
 #@dp.message_handler(text="След.занятие")
 #async def next_lesson(message:types.Message,state:FSMContext):
