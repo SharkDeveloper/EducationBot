@@ -5,6 +5,7 @@ class CreateandAdd_states(StatesGroup):
     waiting_sub_for_note = State()
     waiting_note = State()
     waiting_dayofweek = State()
+    waiting_time = State()
     #timetable
     
     
