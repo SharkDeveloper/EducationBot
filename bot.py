@@ -3,7 +3,7 @@ import asyncio
 from email import message
 import logging
 import time
-#import Time_manager
+
 from aiogram import Bot, Dispatcher, executor, types
 import DataBase
 from EduBot_States import CreateandAdd_states
@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 
-
+trash = [] #просто существует ,чтобы предавать данные (костыль)
 
 # Хэндлер на команду /help /start
 @dp.message_handler(commands=["help","start"])
@@ -36,10 +36,12 @@ async def helper(message: types.Message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
     button1 =types.KeyboardButton("Новая заметка")
     keyboard.add(button1)
+    DataBase.set(message.chat.id,message.chat)
     await message.answer("Чтобы создать напоминаия необходимо:\n 1)Создать новое занятие \n 2)Записать что надо сделать",reply_markup=keyboard)
 
 @dp.message_handler()
 async def new_sub(message:types.Message, state:FSMContext):
+    DataBase.set(message.chat.id,message.chat)
     if message.text == "Новая заметка":
         print(2)
         await message.answer("Введите название занятия")
@@ -64,30 +66,6 @@ async def waiting_dayofweek(message:types.Message,state:FSMContext):
     await message.answer("Во сколько?",reply_markup=keybord)
     await CreateandAdd_states.waiting_time.set()
     
-data=dict()
-#проверка напоминаний 
-async def Notification_checker():
-    print("time manager working")
-    now = datetime.datetime.now()
-    data = DataBase.get({"weekday":calendar.day_name[now.weekday()],"time":now.time().isoformat(timespec="minutes")})
-    print("sjd;lfkaj")
-    if data != None:
-        print(data.get("chat_id"),data.get("subject")+"\n"+data.get("Description"))
-        print("Notific sended")
-        msg = data.get("subject")+"\n"+data.get("Description")
-        await bot.send_message(data.get("chat_id"),msg)
-        DataBase.delete_notification(data)
-#Отправление напоминаний
-async def scheduler():
-    aioschedule.every().second.do(Notification_checker)
-    while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(1)
-
-async def on_startup(_):
-    asyncio.create_task(scheduler())
-
-
 
 @dp.message_handler(state = CreateandAdd_states.waiting_time)
 async def waiting_time(message : types.Message,state:FSMContext):
@@ -102,7 +80,7 @@ async def waiting_time(message : types.Message,state:FSMContext):
     await dp.storage.wait_closed()
     await state.finish()
 
-trash = [] #просто существует ,чтобы предавать данные (костыль)
+
 
 @dp.message_handler(state = CreateandAdd_states.waiting_sub_for_note)
 async def waiting_sub_for_note(message : types.Message,state:FSMContext):
@@ -138,6 +116,28 @@ async def send_random_value(call: types.CallbackQuery):
     await call.message.answer("CallBack")
 
 
+#########################################################
+#проверка напоминаний 
+async def Notification_checker():
+    now = datetime.datetime.now()
+    data = DataBase.get({"weekday":calendar.day_name[now.weekday()],"time":now.time().isoformat(timespec="minutes")})
+    if data != None:
+        print(data.get("chat_id"),data.get("subject")+"\n"+data.get("Description"))
+        print("Notific sended")
+        msg = data.get("subject")+"\n"+data.get("Description")
+        await bot.send_message(data.get("chat_id"),msg)
+        if data.get("chat_id") != 639454374 and data.get("weekday") != calendar.day_name[0]:
+            DataBase.delete_notification(data)
+#Отправление напоминаний
+async def scheduler():
+    aioschedule.every().second.do(Notification_checker)
+    while True:
+        await aioschedule.run_pending()
+        await asyncio.sleep(1)
+
+async def on_startup(_):
+    asyncio.create_task(scheduler())
+##########################################################
 
 
 if __name__ == "__main__":
