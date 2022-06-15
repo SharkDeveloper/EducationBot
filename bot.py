@@ -69,13 +69,14 @@ data=dict()
 async def Notification_checker():
     print("time manager working")
     now = datetime.datetime.now()
-    data = DataBase.get({"weekday":"Среда"})             #DataBase.get({"weekday":calendar.day_name[now.weekday()],"time":now.time().isoformat(timespec="minutes")})
+    data = DataBase.get({"weekday":calendar.day_name[now.weekday()],"time":now.time().isoformat(timespec="minutes")})
     print("sjd;lfkaj")
     if data != None:
         print(data.get("chat_id"),data.get("subject")+"\n"+data.get("Description"))
         print("Notific sended")
         msg = data.get("subject")+"\n"+data.get("Description")
         await bot.send_message(data.get("chat_id"),msg)
+        DataBase.delete_notification(data)
 #Отправление напоминаний
 async def scheduler():
     aioschedule.every().second.do(Notification_checker)

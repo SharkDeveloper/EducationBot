@@ -27,8 +27,8 @@ def set_note(id,key,value,weekday,time):
 
 
 
-def delete_notification(chat_id,sub,descr,weekday):
-    description.delete_many({"chat_id":chat_id,"subject":sub,"Description":descr,"weekday":weekday})
+def delete_notification(data):
+    description.delete_one(data)
 
 #set_note(1389812823,"1","1","Среда","8:00")
 #delete_notification(1389812823,"1","1","Среда")
