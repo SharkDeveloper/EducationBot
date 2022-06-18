@@ -21,7 +21,7 @@ def get(key):
     return description.find_one(key)
 
 def set_note(id,key,value,weekday,time):
-    if weekday == "Понедельник":
+    """if weekday == "Понедельник":
         weekday = calendar.day_name[0]
         
     elif weekday == "Вторник":
@@ -43,7 +43,7 @@ def set_note(id,key,value,weekday,time):
         weekday = calendar.day_name[6]
         
     else:
-        print("Такого для недели нет в базе")
+        print("Такого для недели нет в базе")"""
     add_sub = {"chat_id":id,"subject":key,"Description":value,"weekday":weekday,"time":time}
     description.insert_one(add_sub)
 
@@ -51,7 +51,6 @@ def set_note(id,key,value,weekday,time):
 
 
 def delete_notification(data):
-    description.delete_one(data)
-
+    description.delete_many(data)
 
 

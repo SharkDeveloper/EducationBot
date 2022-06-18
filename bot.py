@@ -19,9 +19,9 @@ MongoDB_token = os.environ.get('MONGODB_URI')
 print(TelegramBot_token)
 print(MongoDB_token)
 # Объект бота
-bot = Bot(token=TelegramBot_token)
+bot = Bot(token="1976410716:AAG7p5K2Hsb6rsYM2YBl0ihSnlMnKwUkFlY")
 #Подключение БД
-storage = MongoStorage(uri=MongoDB_token)  
+storage = MongoStorage(uri="mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/?retryWrites=true&w=majority")  
 # Диспетчер для бота
 dp = Dispatcher(bot,storage=storage)
 # Включаем логирование, чтобы не пропустить важные сообщения
@@ -45,22 +45,7 @@ async def helper(message: types.Message):
     button1 =types.KeyboardButton("Новая заметка")
     keyboard.add(button1)
     DataBase.set(message.chat.id,message.chat)
-    await message.answer("Привет!!\nЯ умею создавть текстовые заметки \nЧтобы создать напоминаия необходимо:\n 1)Создать новое занятие \n 2)Записать что надо сделать ",reply_markup=keyboard)    
-    
-
-@dp.message_handler(state = CreateandAdd_states.waiting_time)
-async def waiting_time(message : types.Message,state:FSMContext):
-    print(6)
-    global trash
-    for i in range(2,len(trash)):
-        DataBase.set_note(message.chat.id,trash[0],trash[1],trash[i],message.text)
-    trash.clear
-    keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
-    keybord.add(types.KeyboardButton("Создать еще одну заметку"))
-    await message.answer("Заметка успешно создана!",reply_markup= keybord)
-    await state.reset_state()
-    await dp.storage.wait_closed()
-    await state.finish()
+    await message.answer("Привет!!\nЯ умею создавть текстовые заметки \nЧтобы создать напоминаия необходимо:\n 1)Создать новое занятие \n 2)Записать что надо сделать ",reply_markup=keyboard)     
 
 
 
@@ -91,20 +76,34 @@ async def waiting_note_name(message : types.Message,state:FSMContext):
 
     keyboard.add(button1,button2,button3,button4,button5,button6,button7)
     await message.answer("Когда напомнить?",reply_markup=keyboard)
+
+    keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
+    keybord.add(types.KeyboardButton("17:00"),types.KeyboardButton("08:00"),types.KeyboardButton("12:00"))
+    await message.answer("Во сколько? Выберите из предложенных вариантов или введите свой в формате ЧЧ:ММ",reply_markup=keybord)
+    
+    await CreateandAdd_states.waiting_time.set()
+   
+@dp.callback_query_handler(text = ["Monday","Tuesday","Wednesday", "Thursday" ,"Friday", "Saturday","Sunday"],state= CreateandAdd_states.waiting_time)
+async def weekday_handler(call: types.CallbackQuery):
+    global trash
+    trash.append(call.data)
+    await call.answer("Новый день недели добавлен")
+    
+@dp.message_handler(state = CreateandAdd_states.waiting_time)
+async def waiting_time(message : types.Message,state:FSMContext):
+    print(6)
+    global trash
+    print(trash)
+    for i in range(2,len(trash)):
+        DataBase.set_note(message.chat.id,trash[0],trash[1],trash[i],message.text)
+
+    trash.clear
+    keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
+    keybord.add(types.KeyboardButton("Создать еще одну заметку"))
+    await message.answer("Заметка успешно создана!",reply_markup= keybord)
     await state.reset_state()
     await dp.storage.wait_closed()
     await state.finish()
-   
-@dp.callback_query_handler(text = ["Monday","Tuesday","Wednesday", "Thursday" ,"Friday", "Saturday","Sunday"])
-async def weekday_handler(call: types.CallbackQuery):
-    await call.answer(call.data)
-    global trash
-    trash.append(call.data)
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(types.KeyboardButton("Указать время напоминания)"))
-    await call.message.answer("Новый день недели добавлен.\nДалее вам следует указать время напоминания",reply_markup=keyboard)
-
-    
 
 @dp.callback_query_handler(text="random_value")
 async def send_random_value(call: types.CallbackQuery):
@@ -117,12 +116,7 @@ async def new_sub(message:types.Message, state:FSMContext):
     if message.text == "Новая заметка" or message.text == "Создать еще одну заметку":
         print(2)
         await message.answer("Введите название занятия")
-        await CreateandAdd_states.waiting_sub_for_note.set()
-    elif message.text == "Указать время напоминания)":    
-        keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
-        keybord.add(types.KeyboardButton("17:00"),types.KeyboardButton("08:00"),types.KeyboardButton("12:00"))
-        await message.answer("Во сколько? Выберите из предложенных вариантов или введите свой в формате ЧЧ:ММ",reply_markup=keybord)
-        await CreateandAdd_states.waiting_time.set()
+        await CreateandAdd_states.waiting_sub_for_note.set()  
     else:
         await message.answer("Сообщенеи не распознано!")
         await helper(message)
