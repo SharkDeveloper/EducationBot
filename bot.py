@@ -13,7 +13,7 @@ import aioschedule
 from boto.s3.connection import S3Connection
 import os
 
-TelegramBot_token = S3Connection(os.environ.get("TELEGRAMBOT_TOKEN"))
+TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
 MongoDB_token = S3Connection(os.environ['MONGODB_URI'])
 token = S3Connection("TELEGRAMBOT_TOKEN")
 
