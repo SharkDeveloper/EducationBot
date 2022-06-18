@@ -1,5 +1,6 @@
 import asyncio
 from email import message
+from lib2to3.pgen2 import token
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 import DataBase
@@ -9,14 +10,17 @@ from aiogram.contrib.fsm_storage.mongo import MongoStorage
 import schedule
 import calendar,datetime
 import aioschedule
+from boto.s3.connection import S3Connection
+import os
 
-
+MongoDB_token = S3Connection(os.environ['MONGODB_URI'])
+TelegramBot_token = S3Connection(os.environ["TELEGRAMBOT_TOKEN"])
 
 
 # Объект бота
-bot = Bot(token="1976410716:AAG7p5K2Hsb6rsYM2YBl0ihSnlMnKwUkFlY")
+bot = Bot(token=TelegramBot_token)
 #Подключение БД
-storage = MongoStorage(uri="mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/?retryWrites=true&w=majority")  
+storage = MongoStorage(uri=MongoDB_token)  
 # Диспетчер для бота
 dp = Dispatcher(bot,storage=storage)
 # Включаем логирование, чтобы не пропустить важные сообщения
