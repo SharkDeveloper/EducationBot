@@ -60,7 +60,7 @@ async def waiting_sub_for_note(message : types.Message,state:FSMContext):
 
 
 @dp.message_handler(state = CreateandAdd_states.waiting_note)
-async def waiting_note_name(message : types.Message,state:FSMContext):
+async def waiting_note_name(message : types.Message):
     print(4)
     global trash
     trash.append(message.text)
@@ -87,23 +87,37 @@ async def waiting_note_name(message : types.Message,state:FSMContext):
 async def weekday_handler(call: types.CallbackQuery):
     global trash
     trash.append(call.data)
-    await call.answer("Новый день недели добавлен")
-    
+    week = {
+        "Monday":0,
+        "Tuesday":1,
+        "Wednesday":2, 
+        "Thursday":3 ,
+        "Friday":4, 
+        "Saturday":5,
+        "Sunday":6
+    }
+    week_ru=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]
+    await call.message.answer("Добавлен новый день напоминания: "+week_ru[week.get(call.data)])
+
 @dp.message_handler(state = CreateandAdd_states.waiting_time)
 async def waiting_time(message : types.Message,state:FSMContext):
     print(6)
     global trash
     print(trash)
-    for i in range(2,len(trash)):
-        DataBase.set_note(message.chat.id,trash[0],trash[1],trash[i],message.text)
+    if len(trash)<3:
+        await message.answer("Введите день недели.")
+        await waiting_note_name(message) 
+    else:
+        for i in range(2,len(trash)):
+            DataBase.set_note(message.chat.id,trash[0],trash[1],trash[i],message.text)
 
-    trash.clear
-    keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
-    keybord.add(types.KeyboardButton("Создать еще одну заметку"))
-    await message.answer("Заметка успешно создана!",reply_markup= keybord)
-    await state.reset_state()
-    await dp.storage.wait_closed()
-    await state.finish()
+        trash.clear
+        keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
+        keybord.add(types.KeyboardButton("Создать еще одну заметку"))
+        await message.answer("Заметка успешно создана!",reply_markup= keybord)
+        await state.reset_state()
+        await dp.storage.wait_closed()
+        await state.finish()
 
 @dp.callback_query_handler(text="random_value")
 async def send_random_value(call: types.CallbackQuery):
