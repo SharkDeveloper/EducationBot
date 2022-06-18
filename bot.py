@@ -14,8 +14,8 @@ from boto.s3.connection import S3Connection
 import os
 
 TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
-MongoDB_token = S3Connection(os.environ['MONGODB_URI'])
-token = S3Connection("TELEGRAMBOT_TOKEN")
+#MongoDB_token = S3Connection(os.environ['MONGODB_URI'])
+#token = S3Connection("TELEGRAMBOT_TOKEN")
 print(TelegramBot_token)
 # Объект бота
 bot = Bot(token=TelegramBot_token)
