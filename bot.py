@@ -32,7 +32,6 @@ async def cmd_random(message: types.Message):
     keyboard.add(types.InlineKeyboardButton(text="Нажми меня", callback_data="random_value"))
     await message.answer("Нажмите на кнопку, чтобы бот отправил число от 1 до 10", reply_markup=keyboard)
 
-
 trash = [] #просто существует ,чтобы предавать данные (костыль)
 
 # Хэндлер на команду /help /start
@@ -109,7 +108,7 @@ async def waiting_time(message : types.Message,state:FSMContext):
         for i in range(2,len(trash)):
             DataBase.set_note(message.chat.id,trash[0],trash[1],trash[i],message.text)
 
-        trash.clear
+        trash.clear()
         keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
         keybord.add(types.KeyboardButton("Создать еще одну заметку"))
         await message.answer("Заметка успешно создана!",reply_markup= keybord)
