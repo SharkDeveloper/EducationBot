@@ -4,3 +4,4 @@ aioschedule==0.5.2
 boto==2.49.0
 pymongo==3.12.3
 schedule==1.1.0
+dnspython
