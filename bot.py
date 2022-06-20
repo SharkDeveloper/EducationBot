@@ -48,6 +48,32 @@ def new_sub_button():
     button2 =types.KeyboardButton("Мои напоминания")
     keyboard.add(button1,button2)
     return keyboard
+#конвертация дней недели с англ на рус
+def weekday_eng_to_rus(weekday):
+    week = {
+        "Monday":0,
+        "Tuesday":1,
+        "Wednesday":2, 
+        "Thursday":3 ,
+        "Friday":4, 
+        "Saturday":5,
+        "Sunday":6
+    }
+    week_ru=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]
+    return week_ru[week.get(weekday)]
+#создане кнопок дней недели
+def new_weekday_buttons():
+    keyboard = types.InlineKeyboardMarkup()
+    button1 = types.InlineKeyboardButton(text="Понедельник",callback_data="Monday")
+    button2 = types.InlineKeyboardButton(text="Вторник",callback_data="Tuesday")
+    button3 = types.InlineKeyboardButton(text="Среда",callback_data="Wednesday")
+    button4 = types.InlineKeyboardButton(text="Четверг",callback_data="Thursday")
+    button5 = types.InlineKeyboardButton(text="Пятница",callback_data="Friday")
+    button6 = types.InlineKeyboardButton(text="Суббота",callback_data="Saturday")
+    button7 = types.InlineKeyboardButton(text="Воскресенье",callback_data="Sunday")
+
+    keyboard.add(button1,button2,button3,button4,button5,button6,button7)
+    return keyboard
 
 # Хэндлер на команду /help /start
 @dp.message_handler(commands=["help","start"])
@@ -73,16 +99,8 @@ async def waiting_note_name(message : types.Message,state:FSMContext):
     print(4)
     await state.update_data({"Description":message.text})
     await state.update_data(count = 0)#счетчик введенных дней недели
-    keyboard = types.InlineKeyboardMarkup()
-    button1 = types.InlineKeyboardButton(text="Понедельник",callback_data="Monday")
-    button2 = types.InlineKeyboardButton(text="Вторник",callback_data="Tuesday")
-    button3 = types.InlineKeyboardButton(text="Среда",callback_data="Wednesday")
-    button4 = types.InlineKeyboardButton(text="Четверг",callback_data="Thursday")
-    button5 = types.InlineKeyboardButton(text="Пятница",callback_data="Friday")
-    button6 = types.InlineKeyboardButton(text="Суббота",callback_data="Saturday")
-    button7 = types.InlineKeyboardButton(text="Воскресенье",callback_data="Sunday")
-
-    keyboard.add(button1,button2,button3,button4,button5,button6,button7)
+    
+    keyboard = new_weekday_buttons()
     await message.answer("Когда напомнить?",reply_markup=keyboard)
 
     await time_request(message)
@@ -106,18 +124,7 @@ async def weekday_handler(call: types.CallbackQuery,state:FSMContext):
     
     await call.message.answer("Добавлен новый день напоминания: "+weekday_eng_to_rus(call.data))
 
-def weekday_eng_to_rus(weekday):
-    week = {
-        "Monday":0,
-        "Tuesday":1,
-        "Wednesday":2, 
-        "Thursday":3 ,
-        "Friday":4, 
-        "Saturday":5,
-        "Sunday":6
-    }
-    week_ru=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]
-    return week_ru[week.get(weekday)]
+
 
 @dp.callback_query_handler(CallbackData_my_notification.filter())
 async def callbacks(call: types.CallbackQuery, callback_data: dict,state:FSMContext):
@@ -130,18 +137,20 @@ async def callbacks(call: types.CallbackQuery, callback_data: dict,state:FSMCont
 async def waiting_time(message : types.Message,state:FSMContext):
     print(6)
     user_data = await state.get_data()
-
-    try:
-        datetime.datetime.strptime(message.text, '%H:%M')
-    except:
-        await message.answer("Некоректно введено время.Пример: 05:24(ЧЧ:ММ)")
-        await CreateandAdd_states.waiting_time.set()
-        return 
-    if user_data == None:
+    user_data = user_data.get("count")
+    if user_data == 0:
         await message.answer("Введите день недели.")
-        await waiting_note_name(message,state) 
+        keyboard = new_weekday_buttons()
+        await message.answer("Когда напомнить?",reply_markup=keyboard)
+        await time_request(message)
     else:
-        for i in range(0,user_data.get("count")):
+        try:
+            datetime.datetime.strptime(message.text, '%H:%M')
+        except:
+            await message.answer("Некоректно введено время.Пример: 05:24(ЧЧ:ММ)")
+            await CreateandAdd_states.waiting_time.set()
+            return 
+        for i in range(0,user_data):
             user_data = await state.get_data()
             DataBase.set_note(message.chat.id,user_data.get("subject"),user_data.get("Description"),user_data.get(f"weekday{i}"),message.text)
         keybord = new_sub_button()
@@ -159,12 +168,14 @@ async def new_sub(message:types.Message, state:FSMContext):
         await message.answer("Введите название занятия")
         await CreateandAdd_states.waiting_sub_for_note.set()
     elif message.text == "Мои напоминания":
-        
-        for i,my_notification in enumerate(DataBase.get_many({"chat_id":message.from_user.id}),1):  #для просмотра имеющихся напоминаний
-            if my_notification == None:
-                keyboard = new_sub_button()
-                await message.answer("У вас еще нет напоминаний",reply_markup=keyboard)
-            else:
+        my_notification = DataBase.get_many({"chat_id":message.from_user.id})
+        print(len([x for x in my_notification]))
+
+        if len([x for x in my_notification]) != 0:
+            keyboard = new_sub_button()
+            await message.answer("У вас еще нет напоминаний",reply_markup=keyboard)
+        else:
+            for i,my_notification in enumerate(DataBase.get_many({"chat_id":message.from_user.id}),1):  #для просмотра имеющихся напоминаний
                 keyboard = types.InlineKeyboardMarkup()
                 #button = types.InlineKeyboardButton(text="Удалить",callback_data=CallbackData_my_notification.new( my_notification.get("chat_id"),my_notification.get("subject"), my_notification.get("Description"),my_notification.get("weekday"),my_notification.get("time").replace(':'," ") ))
                 button = types.InlineKeyboardButton(text="Удалить",callback_data=CallbackData_my_notification.new(f"InlineButton{i}"))
@@ -194,12 +205,15 @@ async def new_sub(message:types.Message, state:FSMContext):
 async def Notification_checker():
     now = datetime.datetime.now()
     data = DataBase.get({"weekday":calendar.day_name[now.weekday()],"time":now.time().isoformat(timespec="minutes")})
-    if data != None:
+    if data == None:
+        print("Джонни,у нас проблемы")
+    else:
         print("Notific sended")
         msg = data.get("subject")+"\n"+data.get("Description")
         await bot.send_message(data.get("chat_id"),msg)
         if data.get("chat_id") != 639454374:
             DataBase.delete_notification(data)
+        
 #Отправление напоминаний
 async def scheduler():
     aioschedule.every().second.do(Notification_checker)
