@@ -1,7 +1,11 @@
 import asyncio
 from email import message
+from itertools import count
 from lib2to3.pgen2 import token
 import logging
+from pydoc import describe
+from re import sub
+from unicodedata import name
 from aiogram import Bot, Dispatcher, executor, types
 import DataBase
 from EduBot_States import CreateandAdd_states
@@ -13,8 +17,13 @@ import aioschedule
 from boto.s3.connection import S3Connection
 import os
 
-TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
-MongoDB_token = os.environ.get('MONGODB_URI')
+#TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
+TelegramBot_token = "1976410716:AAG7p5K2Hsb6rsYM2YBl0ihSnlMnKwUkFlY"
+
+#MongoDB_token = os.environ.get('MONGODB_URI')
+MongoDB_token = "mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/?retryWrites=true&w=majority"
+
+
 
 # Объект бота
 bot = Bot(token=TelegramBot_token)
@@ -52,16 +61,17 @@ async def waiting_sub_for_note(message : types.Message,state:FSMContext):
     await message.answer("Введите что надо сделать")
     await CreateandAdd_states.waiting_note.set()
     global trash
-    trash.append(message.text)  # DataBase.get({"id":message.chat.id,message.text:""})
-
-
+    #trash.append(message.text)  
+    await state.set_data({"subject":message.text})
+    
 
 @dp.message_handler(state = CreateandAdd_states.waiting_note)
-async def waiting_note_name(message : types.Message):
+async def waiting_note_name(message : types.Message,state:FSMContext):
     print(4)
     global trash
     trash.append(message.text)
-    
+    await state.update_data({"Description":message.text})
+    await state.update_data(count = 0)#счетчик введенных дней недели
     keyboard = types.InlineKeyboardMarkup()
     button1 = types.InlineKeyboardButton(text="Понедельник",callback_data="Monday")
     button2 = types.InlineKeyboardButton(text="Вторник",callback_data="Tuesday")
@@ -74,16 +84,25 @@ async def waiting_note_name(message : types.Message):
     keyboard.add(button1,button2,button3,button4,button5,button6,button7)
     await message.answer("Когда напомнить?",reply_markup=keyboard)
 
+    await time_request(message)
+
+    await CreateandAdd_states.waiting_time.set()
+
+async def time_request(message):
+    
     keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
     keybord.add(types.KeyboardButton("17:00"),types.KeyboardButton("08:00"),types.KeyboardButton("12:00"))
     await message.answer("Во сколько? Выберите из предложенных вариантов или введите свой в формате ЧЧ:ММ",reply_markup=keybord)
     
-    await CreateandAdd_states.waiting_time.set()
-   
 @dp.callback_query_handler(text = ["Monday","Tuesday","Wednesday", "Thursday" ,"Friday", "Saturday","Sunday"],state= CreateandAdd_states.waiting_time)
-async def weekday_handler(call: types.CallbackQuery):
-    global trash
+async def weekday_handler(call: types.CallbackQuery,state:FSMContext):
     trash.append(call.data)
+    count = await state.get_data()#счетчик введенных дней недели
+    count=count.get("count")
+    count = int(count)
+    await state.update_data({f"weekday{count}": call.data})
+    count+=1
+    await state.update_data({"count":count})
     week = {
         "Monday":0,
         "Tuesday":1,
@@ -100,20 +119,28 @@ async def weekday_handler(call: types.CallbackQuery):
 async def waiting_time(message : types.Message,state:FSMContext):
     print(6)
     global trash
-    print(trash)
-    if len(trash)<3:
+    user_data = await state.get_data()
+
+    try:
+        datetime.datetime.strptime(message.text, '%H:%M')
+    except:
+        await message.answer("Некоректно введено время.Пример: 05:24(ЧЧ:ММ)")
+        await CreateandAdd_states.waiting_time.set()
+        return 
+    if user_data == None:
         await message.answer("Введите день недели.")
-        await waiting_note_name(message) 
+        await waiting_note_name(message,state) 
     else:
-        for i in range(2,len(trash)):
-            DataBase.set_note(message.chat.id,trash[0],trash[1],trash[i],message.text)
+        for i in range(0,user_data.get("count")):
+            user_data = await state.get_data()
+            DataBase.set_note(message.chat.id,user_data.get("subject"),user_data.get("Description"),user_data.get(f"weekday{i}"),message.text)
 
         trash.clear()
         keybord = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
         keybord.add(types.KeyboardButton("Создать еще одну заметку"))
         await message.answer("Заметка успешно создана!",reply_markup= keybord)
-        await state.reset_state()
-        await dp.storage.wait_closed()
+        #await state.reset_state()
+        #await dp.storage.wait_closed()
         await state.finish()
 
 @dp.callback_query_handler(text="random_value")
@@ -139,11 +166,10 @@ async def Notification_checker():
     now = datetime.datetime.now()
     data = DataBase.get({"weekday":calendar.day_name[now.weekday()],"time":now.time().isoformat(timespec="minutes")})
     if data != None:
-        print(data.get("chat_id"),data.get("subject")+"\n"+data.get("Description"))
         print("Notific sended")
         msg = data.get("subject")+"\n"+data.get("Description")
         await bot.send_message(data.get("chat_id"),msg)
-        if data.get("chat_id") != 639454374 and data.get("weekday") != calendar.day_name[0]:
+        if data.get("chat_id") != 639454374:
             DataBase.delete_notification(data)
 #Отправление напоминаний
 async def scheduler():

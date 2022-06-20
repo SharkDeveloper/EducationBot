@@ -30,4 +30,3 @@ def set_note(id,key,value,weekday,time):
 def delete_notification(data):
     description.delete_many(data)
 
-
