@@ -24,8 +24,8 @@ from aiogram.utils.callback_data import CallbackData
 TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
 
 
-MongoDB_token = os.environ.get('MONGODB_URI')
 
+MongoDB_token = os.environ.get('MONGODB_URI')
 
 
 
@@ -169,9 +169,9 @@ async def new_sub(message:types.Message, state:FSMContext):
         await CreateandAdd_states.waiting_sub_for_note.set()
     elif message.text == "Мои напоминания":
         my_notification = DataBase.get_many({"chat_id":message.from_user.id})
-        print(len([x for x in my_notification]))
-
-        if len([x for x in my_notification]) != 0:
+        a = len([x for x in my_notification])
+        print(a)
+        if a == 0:
             keyboard = new_sub_button()
             await message.answer("У вас еще нет напоминаний",reply_markup=keyboard)
         else:
