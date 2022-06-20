@@ -21,11 +21,11 @@ import os
 from aiogram.utils.callback_data import CallbackData
 
 
-#TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
-TelegramBot_token ="1976410716:AAG7p5K2Hsb6rsYM2YBl0ihSnlMnKwUkFlY"
+TelegramBot_token = os.environ.get("TELEGRAMBOT_TOKEN")
 
-#MongoDB_token = os.environ.get('MONGODB_URI')
-MongoDB_token = "mongodb+srv://Admin:12345687@telegrambot.qqtgh.mongodb.net/?retryWrites=true&w=majority"
+
+MongoDB_token = os.environ.get('MONGODB_URI')
+
 
 
 
