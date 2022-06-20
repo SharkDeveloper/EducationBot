@@ -19,6 +19,9 @@ description = db.Description
 
 def get(key):
     return description.find_one(key)
+def get_many(key):
+    return description.find(key)
+
 
 def set_note(id,key,value,weekday,time):
     add_sub = {"chat_id":id,"subject":key,"Description":value,"weekday":weekday,"time":time}
