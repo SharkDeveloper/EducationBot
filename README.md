@@ -1,2 +1,2 @@
 # EducatBot
- TelgramBot + MongoDB
+ TelgramBot + MongoDB + Aiogram
